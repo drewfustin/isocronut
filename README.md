@@ -2,7 +2,7 @@
 
 For a given geospatial location, calculate an [isochrone (same time) contour](http://en.wikipedia.org/wiki/Isochrone_map) around it. Any point on an x-minute isochrone contour should take a total of x minutes of travel to reach from the origin. Any point within an x-minute contour should be reachable in fewer than x minutes.
 
-Use:
+### Use
 
 ```python
 import isocronut
@@ -13,7 +13,7 @@ duration = 10
 isochrone = isocronut.get_isochrone(origin, duration)
 ```
 
-Parameters:
+### Parameters
 
 __origin__ : Google Maps parseable origination address (str) or [lat, lng] 2-list ([scalar, scalar])
 
@@ -42,7 +42,7 @@ crypto_key=<your crypto key>
 
 __config_path__ : Path location (str) of the 'google_maps.cfg' file, default 'config/'
 
-Dependencies:
+### Dependencies
 
 This module makes use of the following Python modules that you must have installed.
 
