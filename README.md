@@ -28,13 +28,13 @@ __access_type__ : Either 'personal' or 'business' (str), specifying if you are u
   * If 'personal', you won't have access to traffic conditions. The format of the 'google_maps.cfg' config file must be (FYI, no quotes are needed in this file):
 
 > [api]
-> api_number=<your api number>
+> api_number=\<your api number\>
 
   * If 'business', you will be able to use current traffic conditions, which will tighten your contour distance. The format of the 'google_maps.cfg' config file must be:
 
 > [api]
-> client_id=<your client id>
-> crypto_key=<your crypto key>
+> client_id=\<your client id\>
+> crypto_key=\<your crypto key\>
 
 __config_path__ : Path location (str) of the 'google_maps.cfg' file, default 'config/'
 
