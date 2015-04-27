@@ -42,6 +42,10 @@ crypto_key=<your crypto key>
 
 __config_path__ : Path location (str) of the 'google_maps.cfg' file, default 'config/'
 
+### Returns
+
+Isochrone contour as a list of [lat, lng] 2-lists -- [[lat1, lng1], [lat2, lng2], ..., [latn, lngn]] where n = number_of_angles.
+
 ### Dependencies
 
 This module makes use of the following Python modules that you must have installed.
