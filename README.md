@@ -25,7 +25,7 @@ __tolerance__ : Number of minutes (scalar) that a test point can be away from __
 
 __access_type__ : Either 'personal' or 'business' (str), specifying if you are using a personal or business API access for Google Maps, default: 'personal'
 
-  * If 'personal', you won't have access to traffic conditions. The format of the 'google_maps.cfg' config file must be (FYI, no quotes are needed in this file):
+  * If 'personal', you won't have access to traffic conditions. The format of the 'google_maps.cfg' config file must be (e.g. if your api_number were 1234567890, you would replace \<your api number\> below with 1234567890):
 
 ```
 [api]
