@@ -13,6 +13,17 @@ duration = 10
 isochrone = isocronut.get_isochrone(origin, duration)
 ```
 
+or generate your own html file with an embedded Google Maps with isochrone (which will be written to isochrone.html in the current directory):
+
+```python
+import isocronut
+
+origin = '111 W Washington, Chicago'
+duration = 10
+
+isochrone = isocronut.generate_isochrone_map(origin, duration)
+```
+
 ### Parameters
 
 __origin__ : Google Maps parseable origination address (str) or [lat, lng] 2-list ([scalar, scalar])
