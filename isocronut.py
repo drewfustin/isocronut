@@ -470,7 +470,7 @@ def generate_isochrone_map(origin='',
     </html>
     """
 
-    with open('output/isochrone.html', 'w') as f:
+    with open('isochrone.html', 'w') as f:
         f.write(htmltext)
 
     return iso
