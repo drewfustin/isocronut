@@ -24,7 +24,7 @@ def build_url(origin='',
         raise Exception('origin cannot be blank.')
     elif isinstance(origin, str):
         origin_str = origin.replace(' ', '+')
-    elif isinstance(origin, list) and len(list) == 2:
+    elif isinstance(origin, list) and len(origin) == 2:
         origin_str = ','.join(map(str, origin))
     else:
         raise Exception('origin should be a list [lat, lng] or an address string.')
@@ -103,6 +103,35 @@ def build_url(origin='',
         original_url = url.scheme + '://' + url.netloc + url.path + '?' + url.query
         full_url = original_url + '&signature=' + encoded_signature
         return full_url
+
+
+def parse_json(url=''):
+    """
+    Parse the json response from the API
+    """
+    req = urllib2.Request(url)
+    opener = urllib2.build_opener()
+    f = opener.open(req)
+    d = simplejson.load(f)
+
+    if not d['status'] == 'OK':
+        raise Exception('Error. Google Maps API return status: {}'.format(d['status']))
+
+    addresses = d['destination_addresses']
+
+    i = 0
+    durations = [0] * len(addresses)
+    for row in d['rows'][0]['elements']:
+        if not row['status'] == 'OK':
+            # raise Exception('Error. Google Maps API return status: {}'.format(row['status']))
+            durations[i] = 9999
+        else:
+            if 'duration_in_traffic' in row:
+                durations[i] = row['duration_in_traffic']['value'] / 60
+            else:
+                durations[i] = row['duration']['value'] / 60
+        i += 1
+    return [addresses, durations]
 
 
 def geocode_address(address='',
@@ -189,7 +218,7 @@ def select_destination(origin='',
                        access_type='personal',
                        config_path='config/'):
     """
-    Given a distance and azimuthal angle, calculate the geocode of a destination point from the origin.
+    Given a distance and polar angle, calculate the geocode of a destination point from the origin.
     """
     if origin == '':
         raise Exception('origin cannot be blank.')
@@ -219,33 +248,22 @@ def select_destination(origin='',
     return [lat2, lng2]
 
 
-def parse_json(url=''):
+def get_bearing(origin='',
+                destination=''):
     """
-    Parse the json response from the API
+    Calculate the bearing from origin to destination
     """
-    req = urllib2.Request(url)
-    opener = urllib2.build_opener()
-    f = opener.open(req)
-    d = simplejson.load(f)
+    if origin == '':
+        raise Exception('origin cannot be blank')
+    if destination == '':
+        raise Exception('destination cannot be blank')
 
-    if not d['status'] == 'OK':
-        raise Exception('Error. Google Maps API return status: {}'.format(d['status']))
-
-    addresses = d['destination_addresses']
-
-    i = 0
-    durations = [0] * len(addresses)
-    for row in d['rows'][0]['elements']:
-        if not row['status'] == 'OK':
-            # raise Exception('Error. Google Maps API return status: {}'.format(row['status']))
-            durations[i] = 9999
-        else:
-            if 'duration_in_traffic' in row:
-                durations[i] = row['duration_in_traffic']['value'] / 60
-            else:
-                durations[i] = row['duration']['value'] / 60
-        i += 1
-    return [addresses, durations]
+    bearing = atan2(sin((destination[1] - origin[1]) * pi / 180) * cos(destination[0] * pi / 180),
+                    cos(origin[0] * pi / 180) * sin(destination[0] * pi / 180) -
+                    sin(origin[0] * pi / 180) * cos(destination[0] * pi / 180) * cos((destination[1] - origin[1]) * pi / 180))
+    bearing = bearing * 180 / pi
+    bearing = (bearing + 360) % 360
+    return bearing
 
 
 def sort_points(origin='',
@@ -275,24 +293,6 @@ def sort_points(origin='',
     sorted_points = sorted(points)
     sorted_iso = [point[1] for point in sorted_points]
     return sorted_iso
-
-
-def get_bearing(origin='',
-                destination=''):
-    """
-    Calculate the bearing from origin to destination
-    """
-    if origin == '':
-        raise Exception('origin cannot be blank')
-    if destination == '':
-        raise Exception('destination cannot be blank')
-
-    bearing = atan2(sin((destination[1] - origin[1]) * pi / 180) * cos(destination[0] * pi / 180),
-                    cos(origin[0] * pi / 180) * sin(destination[0] * pi / 180) -
-                    sin(origin[0] * pi / 180) * cos(destination[0] * pi / 180) * cos((destination[1] - origin[1]) * pi / 180))
-    bearing = bearing * 180 / pi
-    bearing = (bearing + 360) % 360
-    return bearing
 
 
 def get_isochrone(origin='',
@@ -328,26 +328,20 @@ def get_isochrone(origin='',
     else:
         raise Exception('origin should be a list [lat, lng] or a string address.')
 
-    # Initial r is a guess based on a 5 mph speed in a crow-flies direction
-    r_initial = duration / 12
-
     # Make a radius list, one element for each angle,
     #   whose elements will update until the isochrone is found
-    rad1 = [1] * number_of_angles
-    rad1 = [i * r_initial for i in rad1]
-    phi1 = range(0, number_of_angles)
-    phi1 = [i * int(360 / number_of_angles) for i in phi1]
-    iso = [[0, 0]] * number_of_angles
+    rad1 = [duration / 12] * number_of_angles  # initial r guess based on 5 mph speed
+    phi1 = [i * (360 / number_of_angles) for i in range(number_of_angles)]
     data0 = [0] * number_of_angles
     rad0 = [0] * number_of_angles
     rmin = [0] * number_of_angles
+    rmax = [1.25 * duration] * number_of_angles  # rmax based on 75 mph speed
+    iso = [[0, 0]] * number_of_angles
 
-# Initial r is a guess based on a 75 mph speed in a crow-flies direction
-    rmax = [1] * number_of_angles
-    rmax = [i * 1.25 * duration for i in rad1]
+    # Counter to ensure we're not getting out of hand
     j = 0
 
-# Here's where the binary search starts
+    # Here's where the binary search starts
     while sum([a - b for a, b in zip(rad0, rad1)]) != 0:
         rad2 = [0] * number_of_angles
         for i in range(number_of_angles):
