@@ -140,10 +140,10 @@ def geocode_address(address='',
     """
     For use in calculating distances between 2 locations, the [lat, lng] is needed instead of the address.
     """
-    # Convert origin and destination to URL-compatible strinågs
+    # Convert origin and destination to URL-compatible strings
     if address == '':
         raise Exception('address cannot be blank.')
-    elif isinstance(address, str):
+    elif isinstance(address, str) or isinstance(address, unicode):
         address_str = address.replace(' ', '+')
     else:
         raise Exception('address should be a string.')
