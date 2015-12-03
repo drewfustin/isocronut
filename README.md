@@ -2,6 +2,24 @@
 
 For a given geospatial location, calculate an [isochrone (same time) contour](http://en.wikipedia.org/wiki/Isochrone_map) around it. Any point on an x-minute isochrone contour should take a total of x minutes of travel to reach from the origin. Any point within an x-minute contour should be reachable in fewer than x minutes.
 
+### Update: Javascript implementation
+
+Thanks to help from [wolframteetz](https://github.com/wolframteetz), I've also created a more useable Mapbox/turf.js implementation which allows you to just click on a spot on a map and it calculates 30/60/90/120 minute isochrones real-time. It lives inside [MapboxIsochrones.html](https://github.com/drewfustin/isocronut/blob/master/MapboxIsochrones.html). You can change the desired isochrone limits by editing the html itself. Also, make sure to insert your Mapbox access token into the html.
+
+If you want to try it out yourself and are a Python noob, put the .html file in a folder. From the terminal, cd to that folder. If you're running Python 2, enter the command
+
+```python
+python -m SimpleHTTPServer
+```
+
+or if you're running Python 3, enter the command
+
+```python
+python3 -m http.server
+```
+
+Go to your favorite browser, and point it to [http://localhost:8000/MapboxIsochrones.html](http://localhost:8000/MapboxIsochrones.html). Click away on the map.
+
 ### Use
 
 ```python
