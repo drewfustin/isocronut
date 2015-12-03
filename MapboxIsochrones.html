@@ -1,0 +1,142 @@
+ <!DOCTYPE html>
+    <html>
+    <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Isochrone</title>
+
+    <script src="https://api.tiles.mapbox.com/mapbox.js/v2.2.2/mapbox.js"></script>
+    <script src="https://api.tiles.mapbox.com/mapbox.js/plugins/turf/v2.0.0/turf.min.js" charset="utf-8"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+    <link href='https://api.tiles.mapbox.com/mapbox.js/v2.2.2/mapbox.css' rel='stylesheet' />
+    <style>
+      body { margin:0; padding:0; }
+      #map { position:absolute; top:0; bottom:0; width:100%; }
+    </style>
+
+    </head>
+    <body>
+
+    <div id="map"></div>
+
+    <script>
+    var accessToken = '$$$ YOUR ACCESS TOKEN HERE $$$';
+
+    L.mapbox.accessToken = accessToken;
+
+    var map = L.mapbox.map('map', 'mapbox.streets')
+        .setView([31.2, -99.3], 6);
+
+    map.on('click', function(e) {
+        create_isochrones(map, [e['latlng']['lat'], e['latlng']['lng']]);
+    });
+
+    function create_isochrones(map, origin) {
+
+        map.setView(origin, 8);
+
+        var well = {
+            type: 'Feature',
+            geometry: {
+                type: 'Point',
+                coordinates: [
+                  origin[0],
+                  origin[1]
+                ]
+            },
+            properties: {}
+        };
+
+        L.mapbox.featureLayer(turf.flip(well)).addTo(map);
+
+        var m = [50, 150, 300];
+        var s = [50, 100, 100];
+
+        for (var i in m) {
+            if (i > 0) {
+                var circle = turf.buffer(well, m[i], 'miles');
+                var extent = turf.extent(circle);
+                var additions = turf.random('points', s[i], {bbox: extent});
+                points['features'].push.apply(points['features'], additions['features']);
+            } else {
+                var circle = turf.buffer(well, m[i], 'miles');
+                var extent = turf.extent(circle);
+                var points = turf.random('points', s[i], {bbox: extent});
+            };
+        };
+
+        var deferreds = [];
+        var destinations = {
+            type: 'FeatureCollection',
+            features: []
+        };
+
+        for (i = 0; i < points.features.length; i++) {
+            var url = 'https://api.tiles.mapbox.com/v4/directions/mapbox.driving/' + well.geometry.coordinates[1].toString() + ',' + well.geometry.coordinates[0].toString() + ';' + points.features[i].geometry.coordinates[1].toString() + ',' + points.features[i].geometry.coordinates[0].toString() + '.json?access_token=' + L.mapbox.accessToken;
+            deferreds.push(
+                $.ajax({
+                  url: url,
+				  contentType: 'text/plain',
+			      type: 'GET',
+			      xhrFields: {
+			    	withCredentials: false
+				  },
+                })
+                .success(function(data) {
+                    var min_dur = 9999999;
+                    for (r = 0; r < data['routes'].length; r++) {
+                        min_dur = Math.min(min_dur, data['routes'][r]['duration'] / 60);
+                    };
+                    if (data['destination']) {
+                        var d = {
+                            type: 'Feature',
+                            geometry: {
+                                type: 'Point',
+                                coordinates: [
+                                    data['destination']['geometry']['coordinates'][1],
+                                    data['destination']['geometry']['coordinates'][0]
+                                ]
+                            },
+                            properties: {
+                                'z': min_dur
+                            }
+                        };
+                    destinations['features'].push(d);
+                    };
+                })
+                .fail(function() {
+                  alert("Ajax failed to fetch data")
+                })
+            );
+        }
+
+        $.when.apply($, deferreds).done(
+            function() {
+                var breaks = [30, 60, 90, 120];
+                var colors = {};
+                colors[breaks[0]] = 'rgb(255, 0, 0)';
+                colors[breaks[1]] = 'rgb(255, 255, 0)';
+                colors[breaks[2]] = 'rgb(0, 255, 0)';
+                colors[breaks[3]] = 'rgb(0, 0, 255)';
+                var isolined = turf.isolines(destinations, 'z', 200, breaks);
+
+                for (i = isolined.features.length - 1; i >= 0; i--) {
+                    var polygon_options = {
+                        color: '#000',
+                        opacity: 0.25,
+                        weight: 1,
+                        fillColor: colors[isolined.features[i].properties.z],
+                        fillOpacity: 0.25
+                    };
+                    L.polygon(isolined.features[i].geometry.coordinates, polygon_options).addTo(map);
+                }
+            }
+        );
+
+    };
+
+    </script>
+
+    </body>
+    </html>
