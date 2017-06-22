@@ -29,6 +29,7 @@ origin = '111 W Washington, Chicago'
 duration = 10
 
 isochrone = isocronut.get_isochrone(origin, duration)
+print isochrone
 ```
 
 or generate your own html file with an embedded Google Maps with isochrone (which will be written to isochrone.html in the current directory):
@@ -40,6 +41,7 @@ origin = '111 W Washington, Chicago'
 duration = 10
 
 isochrone = isocronut.generate_isochrone_map(origin, duration)
+print isochrone
 ```
 
 ### Parameters
@@ -52,7 +54,7 @@ __number_of_angles__ : Number of points defining the isochrone (int) -- think of
 
 __tolerance__ : Number of minutes (scalar) that a test point can be away from __duration__ to be considered acceptable, default: 0.1
 
-__access_type__ : Either 'personal' or 'business' (str), specifying if you are using a personal or business API access for Google Maps, default: 'personal'
+__access_type__ : Either 'personal' or 'business' (str), specifying if you are using a personal or business API access for Google Maps (GeoCode API), default: 'personal'
 
   * If 'personal', you won't have access to traffic conditions. The format of the 'google_maps.cfg' config file must be (e.g. if your api_number were 1234567890, you would replace \<your api number\> below with 1234567890):
 
